@@ -1,1 +1,1 @@
-# py-trade-bot
+# NiMi-trading-bot
