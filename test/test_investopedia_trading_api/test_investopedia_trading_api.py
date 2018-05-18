@@ -23,11 +23,9 @@ class TestInvestopediaApi(unittest.TestCase):
         self.assertTrue(client.logged_in)
 
     def test_buy(self):
-        self.assertTrue(self.client.logged_in)
         self.assertTrue(self.client.trade(self.SYMBOL, Action.buy, 1))
 
     def test_sell(self):
-        self.assertTrue(self.client.logged_in)
         portfolio = self.client.get_current_securities()
         for bought in portfolio.bought:
             if bought.symbol == self.SYMBOL:
@@ -37,11 +35,9 @@ class TestInvestopediaApi(unittest.TestCase):
                             'Possesses no stock to test TestInvestopediaApi.test_sell(). Buy some manually.')
 
     def test_get_current_securities(self):
-        self.assertTrue(self.client.logged_in)
         self.assertTrue(self.client.get_current_securities())
         
     def test_get_quote(self):
-        self.assertTrue(self.client.logged_in)
         self.assertTrue(get_quote(self.SYMBOL))
 
 
