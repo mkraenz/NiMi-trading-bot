@@ -13,7 +13,7 @@ script:
   - coverage run src/tests.py
 
 after_success:
-  - codecov --token=6ead0a14-6ac4-4692-8ccf-04e2cb3067ac
+  - codecov --token=981a978e-f9db-4475-8a08-067f9101a333
   
 notifications:
   email: false
