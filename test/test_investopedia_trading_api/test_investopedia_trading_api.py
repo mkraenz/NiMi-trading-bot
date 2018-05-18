@@ -19,6 +19,8 @@ class TestInvestopediaApi(unittest.TestCase):
         self.client = Account(self.USERNAME, self.PASSWORD)
 
     def test_login(self):
+        import sys
+        print('\n'.join(sys.path))
         client = Account(self.USERNAME, self.PASSWORD)
         self.assertTrue(client.logged_in)
 
@@ -43,6 +45,7 @@ class TestInvestopediaApi(unittest.TestCase):
     def test_get_quote(self):
         self.assertTrue(self.client.logged_in)
         self.assertTrue(get_quote(self.SYMBOL))
-        
+
+
 if __name__ == "__main__":
     unittest.main()
