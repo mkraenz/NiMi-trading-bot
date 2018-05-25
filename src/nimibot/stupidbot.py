@@ -12,31 +12,47 @@ class StupidBot(object):
     UPDATE_INTERVAL = 10
     ROI = 1.002
     AMOUNT = 50
+    COMMISION_FEE = 0.0  # determined by broker
 
     def __init__(self):
         self.purchase_price = 0
 
     def wait_till_bought(self, client):
+        start_time = time.time()
+        print('wait_till_bought()')
+
         while True:
             portfolio = client.get_current_securities()
             for stock in portfolio.bought:
                 if stock.symbol == self.SYMBOL:
-                    self.purchase_price = portfolio.bought[0].purchase_price
+                    self.purchase_price = stock.purchase_price
                     return
-            if self.LOG_LEVEL: print('wait_till_bought(), I mean wait_till_bored(), still running')
+            if self.LOG_LEVEL: 
+                print(" waited --- %s seconds ---" % (time.time() - start_time))
             time.sleep(self.UPDATE_INTERVAL)
 
+    def current_revenue(self):
+        return get_quote(self.SYMBOL) * self.AMOUNT - self.COMMISION_FEE
+
+    def total_costs(self):
+        return self.purchase_price * self.AMOUNT + self.COMMISION_FEE
+
     def wait_till_ask(self):
-        while get_quote(self.SYMBOL) / self.purchase_price >= self.ROI:
+        start_time = time.time()
+        print('enter wait_till_ask()')
+        while self.current_revenue() / self.total_costs() < self.ROI:
             if self.LOG_LEVEL: 
-                print('wait_till_ask() still running')
+                print(" waited --- %s seconds ---" % (time.time() - start_time))
                 print('current price', get_quote(self.SYMBOL))
-                print('current yield', get_quote(self.SYMBOL) / self.purchase_price)
+                print('current yield',)
             time.sleep(self.UPDATE_INTERVAL)
 
     def wait_till_sold(self, client):
+        start_time = time.time()
+        print('wait_till_sold()')
         while not client.get_current_securities().bought:
-            if self.LOG_LEVEL: print('wait_till_sold() still running')
+            if self.LOG_LEVEL: 
+                print(" waited --- %s seconds ---" % (time.time() - start_time))
             time.sleep(self.UPDATE_INTERVAL)            
 
     def log_profit(self, current_cash, cash_before_purchase):
@@ -55,6 +71,9 @@ class StupidBot(object):
         if self.LOG_LEVEL: print('buy order sent.')
 
         self.wait_till_bought(client)
+        print('purchase price', self.purchase_price)
+        print('total costs = ', self.total_costs())
+        
         self.wait_till_ask()
         client.trade(self.SYMBOL, Action.sell, self.AMOUNT)
         if self.LOG_LEVEL: print('sell order sent.')
@@ -63,7 +82,7 @@ class StupidBot(object):
         if self.LOG_LEVEL: 
             new_cash = client.get_portfolio_status().cash
             print('new cash', str(new_cash))
-            print('profit', str(new_cash - self.cash_before_purchase))
+            print('profit', str(new_cash - cash_before_purchase))
         self.log_profit(client.get_portfolio_status().cash, cash_before_purchase)
         
 
