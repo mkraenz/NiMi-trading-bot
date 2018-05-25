@@ -1,0 +1,19 @@
+language: python
+
+python:
+  - "3.6"
+
+install:
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
+  
+script: 
+  - cp -a test/. src
+  - pip install src/.
+  - coverage run src/tests.py
+
+after_success:
+  - codecov --token=981a978e-f9db-4475-8a08-067f9101a333
+  
+notifications:
+  email: false

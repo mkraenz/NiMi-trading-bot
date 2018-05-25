@@ -1,1 +1,1 @@
-InvestopediaApi
+git+git://github.com/kirkthaker/investopedia-trading-api.git#egg=InvestopediaApi
