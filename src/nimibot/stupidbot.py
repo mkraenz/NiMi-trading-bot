@@ -9,13 +9,17 @@ class StupidBot(object):
     USERNAME = '3rgwrqr2t2wrq5rgwy4u4ywsgr@trash-mail.com'
     PASSWORD = 'password'
     SYMBOL = 'GOOGL'
-    UPDATE_INTERVAL = 10
-    ROI = 1.002
+    UPDATE_INTERVAL = 60  # Investopedia updates prices etc every 60 to 80 seconds
+    ROI = 1.0002
     AMOUNT = 50
     COMMISION_FEE = 0.0  # determined by broker
 
     def __init__(self):
         self.purchase_price = 0
+
+
+    def print_waited_minutes(self, start_time):
+        return print(" waited --- %s minutes ---" % ((time.time() - start_time) / 60))
 
     def wait_till_bought(self, client):
         start_time = time.time()
@@ -28,7 +32,7 @@ class StupidBot(object):
                     self.purchase_price = stock.purchase_price
                     return
             if self.LOG_LEVEL: 
-                print(" waited --- %s seconds ---" % (time.time() - start_time))
+                self.print_waited_minutes(start_time)
             time.sleep(self.UPDATE_INTERVAL)
 
     def current_revenue(self):
@@ -42,17 +46,21 @@ class StupidBot(object):
         print('enter wait_till_ask()')
         while self.current_revenue() / self.total_costs() < self.ROI:
             if self.LOG_LEVEL: 
-                print(" waited --- %s seconds ---" % (time.time() - start_time))
+                self.print_waited_minutes(start_time)
                 print('current price', get_quote(self.SYMBOL))
-                print('current yield',)
+                print('current yield', self.current_revenue() / self.total_costs())
             time.sleep(self.UPDATE_INTERVAL)
+
+
+    def is_not_stock_yet_sold(self, client):
+        return self.SYMBOL in [s.symbol for s in client.get_current_securities().bought]
 
     def wait_till_sold(self, client):
         start_time = time.time()
         print('wait_till_sold()')
-        while not client.get_current_securities().bought:
+        while self.is_not_stock_yet_sold(client):
             if self.LOG_LEVEL: 
-                print(" waited --- %s seconds ---" % (time.time() - start_time))
+                self.print_waited_minutes(start_time)
             time.sleep(self.UPDATE_INTERVAL)            
 
     def log_profit(self, current_cash, cash_before_purchase):
