@@ -10,20 +10,18 @@ class StupidBot(object):
     PASSWORD = 'password'
     SYMBOL = 'GOOGL'
     UPDATE_INTERVAL = 60  # Investopedia updates prices etc every 60 to 80 seconds
-    ROI = 1.0002
+    ROI = 1.00005
     AMOUNT = 50
     COMMISION_FEE = 0.0  # determined by broker
 
     def __init__(self):
         self.purchase_price = 0
-
-
-    def print_waited_minutes(self, start_time):
-        return print(" waited --- %s minutes ---" % ((time.time() - start_time) / 60))
+        filename = os.path.join(os.getcwd(), 'ProfitOfNiMiBot.txt')
+        self.f = open(filename, 'w')
 
     def wait_till_bought(self, client):
         start_time = time.time()
-        print('wait_till_bought()')
+        self.log('wait_till_bought()')
 
         while True:
             portfolio = client.get_current_securities()
@@ -31,8 +29,7 @@ class StupidBot(object):
                 if stock.symbol == self.SYMBOL:
                     self.purchase_price = stock.purchase_price
                     return
-            if self.LOG_LEVEL: 
-                self.print_waited_minutes(start_time)
+            if self.LOG_LEVEL: self.log_waited_minutes(start_time)
             time.sleep(self.UPDATE_INTERVAL)
 
     def current_revenue(self):
@@ -43,56 +40,59 @@ class StupidBot(object):
 
     def wait_till_ask(self):
         start_time = time.time()
-        print('enter wait_till_ask()')
+        self.log('wait_till_ask()')
         while self.current_revenue() / self.total_costs() < self.ROI:
             if self.LOG_LEVEL: 
-                self.print_waited_minutes(start_time)
-                print('current price', get_quote(self.SYMBOL))
-                print('current yield', self.current_revenue() / self.total_costs())
+                self.log_waited_minutes(start_time)
+                self.log('current price', get_quote(self.SYMBOL))
+                self.log('current ROI', self.current_revenue() / self.total_costs())
             time.sleep(self.UPDATE_INTERVAL)
-
 
     def is_not_stock_yet_sold(self, client):
         return self.SYMBOL in [s.symbol for s in client.get_current_securities().bought]
 
     def wait_till_sold(self, client):
         start_time = time.time()
-        print('wait_till_sold()')
+        self.log('wait_till_sold()')
         while self.is_not_stock_yet_sold(client):
             if self.LOG_LEVEL: 
-                self.print_waited_minutes(start_time)
+                self.log_waited_minutes(start_time)
             time.sleep(self.UPDATE_INTERVAL)            
 
+    def log(self, name, value=''):
+        self.f.writelines([name, ' = ', str(value), '\n'])
+        print(name, ' = ', str(value))
+
     def log_profit(self, current_cash, cash_before_purchase):
-        filename = os.path.join(os.getcwd(), 'ProfitOfNiMiBot.txt')
-        with open(filename, 'w', newline='') as f:
-            f.write('Profit = ' + str(current_cash - cash_before_purchase) + '\n')
-            f.write('Cash after purchase = ' + str(current_cash) + '\n')
-            f.write('Cash before purchase = ' + str(cash_before_purchase) + '\n')
+        self.log('Profit', current_cash - cash_before_purchase)
+        self.log('Cash after purchase', current_cash)
+        self.log('Cash before purchase', cash_before_purchase)
+    
+    def log_after_wait_till_bought(self):
+        self.log('purchase price', self.purchase_price)
+        self.log('total costs', self.total_costs())
+
+    def log_waited_minutes(self, start_time):
+        self.log('waited minutes', ((time.time() - start_time) / 60))
     
     def run(self):
         client = Account(self.USERNAME, self.PASSWORD)
         cash_before_purchase = client.get_portfolio_status().cash
-        if self.LOG_LEVEL: print('cash before purchase = ', str(cash_before_purchase))
 
         client.trade(self.SYMBOL, Action.buy, self.AMOUNT)
-        if self.LOG_LEVEL: print('buy order sent.')
+        if self.LOG_LEVEL: self.log('buy order sent')
 
         self.wait_till_bought(client)
-        print('purchase price', self.purchase_price)
-        print('total costs = ', self.total_costs())
+        if self.LOG_LEVEL: self.log_after_wait_till_bought()
         
         self.wait_till_ask()
         client.trade(self.SYMBOL, Action.sell, self.AMOUNT)
-        if self.LOG_LEVEL: print('sell order sent.')
+        if self.LOG_LEVEL: self.log('sell order sent')
         
         self.wait_till_sold(client)
-        if self.LOG_LEVEL: 
-            new_cash = client.get_portfolio_status().cash
-            print('new cash', str(new_cash))
-            print('profit', str(new_cash - cash_before_purchase))
-        self.log_profit(client.get_portfolio_status().cash, cash_before_purchase)
-        
+        if self.LOG_LEVEL: self.log_profit(client.get_portfolio_status().cash, cash_before_purchase)
+        self.f.close()
+
 
 if __name__ == '__main__':
     StupidBot().run()
