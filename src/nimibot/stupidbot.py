@@ -17,23 +17,18 @@ class StupidBot(object):
     def wait_till_bought(self, client):
         while True:
             portfolio = client.get_current_securities()
-            if portfolio.bought:
-                self.purchase_price = portfolio.bought[0].purchase_price
-                return
+            for stock in portfolio.bought:
+                if stock.symbol == self.SYMBOL:
+                    self.purchase_price = portfolio.bought[0].purchase_price
+                    return
             time.sleep(self.UPDATE_INTERVAL)
 
     def wait_till_ask(self):
-        while True:
-            current_price = get_quote(self.SYMBOL)
-            if current_price / self.purchase_price > self.ROI:
-                return
+        while get_quote(self.SYMBOL) / self.purchase_price < self.ROI:
             time.sleep(self.UPDATE_INTERVAL)
 
     def wait_till_sold(self, client):
-        while True:
-            portfolio = client.get_current_securities()
-            if not portfolio.bought:
-                return
+        while not client.get_current_securities().bought:
             time.sleep(self.UPDATE_INTERVAL)            
 
     def log_profit(self, current_cash, cash_before_purchase):
