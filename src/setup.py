@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(
-    name="NiMi-Trading-Bot",
+    name="NiMiTradingBot",
     version="0.1",
     packages=find_packages(),
 )

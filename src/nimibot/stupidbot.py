@@ -1,23 +1,26 @@
 from InvestopediaApi.ita import Account, Action, get_quote
 import time
 import os
+import math
+from nimibot.config import PASSWORD, USERNAME
+from datetime import datetime
 
 
 class StupidBot(object):
     
     LOG_LEVEL = 5
-    USERNAME = '3rgwrqr2t2wrq5rgwy4u4ywsgr@trash-mail.com'
-    PASSWORD = 'password'
     SYMBOL = 'GOOGL'
-    UPDATE_INTERVAL = 60  # Investopedia updates prices etc every 60 to 80 seconds
+    UPDATE_INTERVAL = 5  # Investopedia updates prices etc every 60 to 80 seconds
     ROI = 1.00005
     AMOUNT = 50
     COMMISION_FEE = 0.0  # determined by broker
+    LOG_FILENAME = 'log_stupid_bot.txt'
 
-    def __init__(self):
+    def __init__(self, client):
+        self.client = client
         self.purchase_price = 0
-        filename = os.path.join(os.getcwd(), 'ProfitOfNiMiBot.txt')
-        self.f = open(filename, 'w')
+        filename = os.path.join(os.getcwd(), self.LOG_FILENAME)
+        self.f = open(filename, 'a', 1)
 
     def wait_till_bought(self, client):
         start_time = time.time()
@@ -47,6 +50,8 @@ class StupidBot(object):
                 self.log('current price', get_quote(self.SYMBOL))
                 self.log('current ROI', self.current_revenue() / self.total_costs())
             time.sleep(self.UPDATE_INTERVAL)
+            if (time.time() - start_time) / 60 > 60:  # TODO: remove timeout after 60 min
+                return
 
     def is_not_stock_yet_sold(self, client):
         return self.SYMBOL in [s.symbol for s in client.get_current_securities().bought]
@@ -57,7 +62,7 @@ class StupidBot(object):
         while self.is_not_stock_yet_sold(client):
             if self.LOG_LEVEL: 
                 self.log_waited_minutes(start_time)
-            time.sleep(self.UPDATE_INTERVAL)            
+            time.sleep(self.UPDATE_INTERVAL)
 
     def log(self, name, value=''):
         self.f.writelines([name, ' = ', str(value), '\n'])
@@ -73,26 +78,27 @@ class StupidBot(object):
         self.log('total costs', self.total_costs())
 
     def log_waited_minutes(self, start_time):
-        self.log('waited minutes', ((time.time() - start_time) / 60))
+        self.log('waited minutes', (math.floor((time.time() - start_time) / 60 * 100) / 100))
     
     def run(self):
-        client = Account(self.USERNAME, self.PASSWORD)
-        cash_before_purchase = client.get_portfolio_status().cash
+        if self.LOG_LEVEL: self.log('\n'*10 + '>>>>>>>>>>>>> %s .run() at time' % (self.__class__.__name__), str(datetime.now()))
+        cash_before_purchase = self.client.get_portfolio_status().cash
 
-        client.trade(self.SYMBOL, Action.buy, self.AMOUNT)
+        self.client.trade(self.SYMBOL, Action.buy, self.AMOUNT)
         if self.LOG_LEVEL: self.log('buy order sent')
 
-        self.wait_till_bought(client)
+        self.wait_till_bought(self.client)
         if self.LOG_LEVEL: self.log_after_wait_till_bought()
         
         self.wait_till_ask()
-        client.trade(self.SYMBOL, Action.sell, self.AMOUNT)
+        self.client.trade(self.SYMBOL, Action.sell, self.AMOUNT)
         if self.LOG_LEVEL: self.log('sell order sent')
         
-        self.wait_till_sold(client)
-        if self.LOG_LEVEL: self.log_profit(client.get_portfolio_status().cash, cash_before_purchase)
+        self.wait_till_sold(self.client)
+        if self.LOG_LEVEL: self.log_profit(self.client.get_portfolio_status().cash, cash_before_purchase)
         self.f.close()
 
 
 if __name__ == '__main__':
-    StupidBot().run()
+    client = Account(USERNAME, PASSWORD)
+    StupidBot(client).run()
