@@ -6,7 +6,7 @@ class IBroker(object):
     def ask(self, symbol, amount):
         raise NotImplementedError("Class %s doesn't implement ask()" % (self.__class__.__name__))
     
-    def fee(self, symbol):
+    def fee(self):
         raise NotImplementedError("Class %s doesn't implement fees()" % (self.__class__.__name__))
 
     def stocks(self):

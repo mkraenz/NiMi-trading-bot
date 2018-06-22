@@ -7,12 +7,12 @@ from broker.config import COMMISION_FEE
 class AdapterInvestopediaApiToIBroker(IBroker):
     
     def bid(self, symbol, amount):
-        return self.client.trade(symbol, Action.sell, amount)
-    
-    def ask(self, symbol, amount):
         return self.client.trade(symbol, Action.buy, amount)
     
-    def fee(self, symbol):
+    def ask(self, symbol, amount):
+        return self.client.trade(symbol, Action.sell, amount)
+    
+    def fee(self):
         return COMMISION_FEE
 
     def current_stocks(self):
@@ -24,7 +24,7 @@ class AdapterInvestopediaApiToIBroker(IBroker):
     
     def login(self, username, password):
         self.client = Account(username, password)
-        return self.client.logged_in
+        if not self.client.logged_in: raise Exception('Login failed.')
     
     def __createStock(self, security):
         return Stock(
