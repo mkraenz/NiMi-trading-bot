@@ -32,6 +32,5 @@ class AdapterInvestopediaApiToIBroker(IBroker):
             name=security.description,
             quantity=security.quantity,
             purchase_price=security.purchase_price,
-            current_price=security.current_price
         )
         
