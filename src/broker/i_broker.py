@@ -1,12 +1,12 @@
 class IBroker(object):
     
-    def bid(self, symbol):
+    def bid(self, symbol, amount):
         raise NotImplementedError("Class %s doesn't implement bid()" % (self.__class__.__name__))
 
-    def ask(self, symbol):
+    def ask(self, symbol, amount):
         raise NotImplementedError("Class %s doesn't implement ask()" % (self.__class__.__name__))
     
-    def fees(self, symbol):
+    def fee(self, symbol):
         raise NotImplementedError("Class %s doesn't implement fees()" % (self.__class__.__name__))
 
     def stocks(self):
@@ -15,8 +15,5 @@ class IBroker(object):
     def cash(self):
         raise NotImplementedError("Class %s doesn't implement cash()" % (self.__class__.__name__))
     
-    def portfolio_value(self):
-        raise NotImplementedError("Class %s doesn't implement posrtfolio_value()" % (self.__class__.__name__))
-
     def login(self):
         raise NotImplementedError("Class %s doesn't implement login()" % (self.__class__.__name__))
