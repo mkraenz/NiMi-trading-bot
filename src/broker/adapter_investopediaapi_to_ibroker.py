@@ -7,30 +7,33 @@ from broker.config import COMMISION_FEE
 class AdapterInvestopediaApiToIBroker(IBroker):
     
     def bid(self, symbol, amount):
-        return self.client.trade(symbol, Action.buy, amount)
+        return self.broker.trade(symbol, Action.buy, amount)
     
     def ask(self, symbol, amount):
-        return self.client.trade(symbol, Action.sell, amount)
+        return self.broker.trade(symbol, Action.sell, amount)
     
     def fee(self):
         return COMMISION_FEE
 
-    def current_stocks(self):
-        bought = self.client.get_current_securities().bought
+    def stocks(self):
+        bought = self.broker.get_current_securities().bought
         return [self.__createStock(stock) for stock in bought]
         
     def cash(self):
-        return self.client.get_portfolio_status().cash
+        return self.broker.get_portfolio_status().cash
     
     def login(self, username, password):
-        self.client = Account(username, password)
-        if not self.client.logged_in: raise Exception('Login failed.')
+        self.broker = Account(username, password)
+        if not self.broker.logged_in: raise Exception('Login failed.')
     
     def __createStock(self, security):
-        return Stock(
-            symbol=security.symbol,
-            name=security.description,
-            quantity=security.quantity,
-            purchase_price=security.purchase_price,
-        )
+        return Stock(security.symbol,
+                     security.description,
+                     security.quantity,
+                     security.purchase_price,
+                     )
+        
+    def getQuantity(self, symbol):
+        filtered_stock = [stock for stock in self.stocks() if stock.symbol == symbol]
+        return 0 if not filtered_stock else filtered_stock[0].quantity
         

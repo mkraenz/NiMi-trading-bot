@@ -17,3 +17,7 @@ class IBroker(object):
     
     def login(self):
         raise NotImplementedError("Class %s doesn't implement login()" % (self.__class__.__name__))
+    
+    def getQuantity(self, symbol):
+        raise NotImplementedError("Class %s doesn't implement getQuantity()" % (self.__class__.__name__))
+        
