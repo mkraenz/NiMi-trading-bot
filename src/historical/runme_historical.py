@@ -1,4 +1,3 @@
-# from nimibot.stupidbot import StupidBot
 from historical.historical_broker import HistoricalBroker
 from historical.historical_market_data import HistoricalMarketData
 from nimibot.stupidbot import StupidBot
