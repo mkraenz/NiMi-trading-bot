@@ -1,11 +1,14 @@
 import time
+import os
+from _datetime import datetime
 
 
 class StupidBot(object):
     
-    def configure_logging(self, log_level=0, log_filename='log_bot.txt'):
+    def configure_logging(self, log_level=5, log_filename='log_bot.txt'):
         self.LOG_LEVEL = log_level  # 0 log nothing, 5 even logs the location of your mom
         self.LOG_FILENAME = log_filename
+        self.f = None
     
     def configure_running_behavior(self, symbol='GOOG', update_interval=5, roi=1.00005, amount=50):
         '''
@@ -45,32 +48,45 @@ class StupidBot(object):
     def wait_till_ask(self):
         period = 1
         while self.current_revenue() < self.ROI * self.total_costs():
-            print('Period is ', period)
             period += 1
             time.sleep(self.UPDATE_INTERVAL)
+        self.log('Period is ' + str(period))
 
     def wait_till_sold(self, expected_amount_after_sell=0):
         while self.broker.getQuantity(self.SYMBOL) > expected_amount_after_sell:
             time.sleep(self.UPDATE_INTERVAL)
 
     def run(self):
-        print('StupidBot.run()')
+        self.log('\n' * 5 + '>>>>>>>>>>>>> %s .run()' % (self.__class__.__name__)) 
+        self.log('at time' + str(datetime.now()))
         cash_before_purchase = self.broker.cash()
 
         self.broker.bid(self.SYMBOL, self.AMOUNT)
-        print('StupidBot bids')
+        self.log('StupidBot bids')
         
         self.wait_till_bought()
-        print('StupidBot bought')
-        print('Total costs for purchase', cash_before_purchase - self.broker.cash())
+        self.log('StupidBot bought')
+        self.log('Total costs for purchase' + str(cash_before_purchase - self.broker.cash()))
         
         self.wait_till_ask()
-        print('StupidBot waits for ask')
+        self.log('StupidBot waits for ask')
         self.broker.ask(self.SYMBOL, self.AMOUNT)
-        print('StupidBot asks')
-        print('Profit', self.broker.cash() - cash_before_purchase)
-        print('Cash after purchase', self.broker.cash())
-        print('Cash before purchase', cash_before_purchase)
+        self.log('StupidBot asks')
+        self.log('Profit ' + str(self.broker.cash() - cash_before_purchase))
+        self.log('Cash after purchase ' + str(self.broker.cash()))
+        self.log('Cash before purchase ' + str(cash_before_purchase))
         
         self.wait_till_sold()
-        print('StupidBot sold')
+        self.log('StupidBot sold')
+        self.closeLog()
+        
+    def log(self, string):
+        if not self.f:
+            filename = os.path.join(os.getcwd(), self.LOG_FILENAME)
+            self.f = open(filename, 'a', 1)
+        self.f.writelines([string, '\n'])
+        print(string)
+        
+    def closeLog(self):
+        self.f.close()
+        self.f = None
